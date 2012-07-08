@@ -44,8 +44,11 @@ public class QfjServer implements Application {
 
 		SessionSettings settings = new SessionSettings(Thread.currentThread().getContextClassLoader()
 				.getResourceAsStream("server.cfg"));
+		// MessageStoreFactory storeFactory = new MemoryStoreFactory();
+		// LogFactory logFactory = new SLF4JLogFactory(settings);
 		MessageStoreFactory storeFactory = new FileStoreFactory(settings);
 		LogFactory logFactory = new FileLogFactory(settings);
+
 		MessageFactory messageFactory = new DefaultMessageFactory();
 		Acceptor acceptor = new SocketAcceptor(application, storeFactory, settings, logFactory, messageFactory);
 		acceptor.start();

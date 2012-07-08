@@ -35,10 +35,11 @@ import quickfix.fix44.NewOrderSingle;
 
 public class QfjClient implements Application {
 
+	private static final int ITER_MAX = 100000;
+
 	/**
 	 * @param args
 	 */
-
 	public static void main(String args[]) throws Exception {
 
 		// FooApplication is your class that implements the Application interface
@@ -48,6 +49,10 @@ public class QfjClient implements Application {
 				.getResourceAsStream("client.cfg"));
 		MessageStoreFactory storeFactory = new FileStoreFactory(settings);
 		LogFactory logFactory = new FileLogFactory(settings);
+
+		// MessageStoreFactory storeFactory = new MemoryStoreFactory();
+		// LogFactory logFactory = new SLF4JLogFactory(settings);
+
 		MessageFactory messageFactory = new DefaultMessageFactory();
 		SocketInitiator initiator = new SocketInitiator(application, storeFactory, settings, logFactory, messageFactory);
 		initiator.start();
@@ -60,6 +65,7 @@ public class QfjClient implements Application {
 	private static Logger logger = LoggerFactory.getLogger(QfjClient.class);
 	private int counter;
 	private long sendTime;
+	private long cumTime;
 
 	@Override
 	public void onCreate(SessionID sessionId) {
@@ -103,12 +109,16 @@ public class QfjClient implements Application {
 	@Override
 	public void fromApp(Message message, SessionID sessionId) throws FieldNotFound, IncorrectDataFormat,
 			IncorrectTagValue, UnsupportedMessageType {
-		System.out.println((System.nanoTime() - sendTime) / 1000);
+		cumTime += (System.nanoTime() - sendTime) / 1000;
 		logger.debug("from app - message: {} - session: {}", message, sessionId);
 		sendNewOrder(sessionId);
 	}
 
 	private void sendNewOrder(SessionID sessionId) {
+		if (counter == ITER_MAX) {
+			System.out.println(cumTime / counter + " us / order");
+			System.exit(0);
+		}
 		NewOrderSingle message = new NewOrderSingle(new ClOrdID(Integer.toString(counter++)), new Side(Side.BUY),
 				new TransactTime(new Date()), new OrdType(OrdType.MARKET));
 		message.setString(Symbol.FIELD, "FP");
@@ -119,5 +129,6 @@ public class QfjClient implements Application {
 		} catch (SessionNotFound e) {
 			logger.error("cannot find session", e);
 		}
+
 	}
 }
