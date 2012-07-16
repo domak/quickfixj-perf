@@ -1,6 +1,7 @@
 package org.dmk.quickfixj.perf.server;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,8 @@ public class QfjClient implements Application {
 	 * @param args
 	 */
 	public static void main(String args[]) throws Exception {
+
+		Runtime.getRuntime().exec("rm -rf /home/domak/dev/projects/test/quickfixj/test/quickfixj-perf/target/client");
 
 		// FooApplication is your class that implements the Application interface
 		Application application = new QfjClient();
@@ -109,14 +112,16 @@ public class QfjClient implements Application {
 	@Override
 	public void fromApp(Message message, SessionID sessionId) throws FieldNotFound, IncorrectDataFormat,
 			IncorrectTagValue, UnsupportedMessageType {
-		cumTime += (System.nanoTime() - sendTime) / 1000;
+		cumTime += (System.nanoTime() - sendTime);
 		logger.debug("from app - message: {} - session: {}", message, sessionId);
 		sendNewOrder(sessionId);
 	}
 
 	private void sendNewOrder(SessionID sessionId) {
 		if (counter == ITER_MAX) {
-			System.out.println(cumTime / counter + " us / order");
+			long cumTimeSeconds = TimeUnit.SECONDS.convert(cumTime, TimeUnit.NANOSECONDS);
+			System.out.println(cumTimeSeconds + " s - " + ((float) counter / cumTimeSeconds) + " order/s - "
+					+ TimeUnit.MICROSECONDS.convert(cumTime, TimeUnit.NANOSECONDS) / counter + " us / order");
 			System.exit(0);
 		}
 		NewOrderSingle message = new NewOrderSingle(new ClOrdID(Integer.toString(counter++)), new Side(Side.BUY),
@@ -129,6 +134,5 @@ public class QfjClient implements Application {
 		} catch (SessionNotFound e) {
 			logger.error("cannot find session", e);
 		}
-
 	}
 }

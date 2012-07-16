@@ -39,6 +39,8 @@ public class QfjServer implements Application {
 
 	public static void main(String args[]) throws Exception {
 
+		Runtime.getRuntime().exec("rm -rf /home/domak/dev/projects/test/quickfixj/test/quickfixj-perf/target/server");
+
 		// FooApplication is your class that implements the Application interface
 		Application application = new QfjServer();
 
